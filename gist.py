@@ -72,6 +72,22 @@ config.CSSHtmlHeaderTransformer.enabled = False
 
 C = ConverterTemplate(config=config)
 
+
+md = Config()
+md.ConverterTemplate.template_file = 'markdown'
+md.NbconvertApp.fileext = 'md'
+md.ExtractFigureTransformer.enabled = True
+
+rst = Config()
+rst.ConverterTemplate.template_file = 'rst'
+rst.NbconvertApp.fileext = 'rst'
+rst.ExtractFigureTransformer.enabled = True
+
+converters = {
+    'markdown':ConverterTemplate(config=md),
+    'rst':ConverterTemplate(config=rst)
+    }
+
 minutes = 60
 hours = 60*minutes
 
@@ -217,7 +233,36 @@ def render_url_urls(url, https, forced_theme=None):
         app.logger.error("Couldn't render notebook from %s" % url, exc_info=True)
         abort(400)
 
+import zipfile, StringIO
 
+@app.route('/zip/<string:format>/<path:url>')
+def to_zip(url, format):
+    return zip_url('http://'+url, format)
+
+@app.route('/zips/<string:format>/<path:url>')
+def to_zips(url, format):
+    return zip_url('https://'+url, format)
+
+def zip_url(url, format):
+    converter=converters[format] 
+    r = requests.get(url)
+    nb = nbformat.reads_json(r.content)
+    output, resources = converter.convert(nb)
+    o = StringIO.StringIO()
+    zf = zipfile.ZipFile(o, mode='w')
+    title = nb.get('metadata', {}).get('name', 'notebook')+'.'+format
+    zf.writestr(title,output.encode())
+
+    figs = resources.get('figures', {})
+    for key,val in figs.iteritems():
+        zf.writestr(key,str(val))
+    zf.close()
+    o.seek(0)
+    response = app.make_response(o.read())
+    o.close()
+    response.headers['Content-Type'] = 'application/octet-stream'
+    response.headers['Content-Disposition'] = 'attachment; filename="'+title+'.zip"'
+    return response
 
 @app.route('/url/<path:url>')
 def render_url(url):
