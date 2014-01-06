@@ -404,12 +404,17 @@ class UserGistsHandler(BaseHandler):
         entries = []
         for gist in gists:
             notebooks = [f for f in gist['files'] if f.endswith('.ipynb')]
+            thumb = gist['files'].get('thumbnail.png',None)
+            if thumb:
+                print thumb['raw_url']
             if notebooks:
                 entries.append(dict(
                     id=gist['id'],
                     notebooks=notebooks,
                     description=gist['description'] or '',
+                    thumb=thumb
                 ))
+
         github_url = u"https://gist.github.com/{user}".format(user=user)
         html = self.render_template("usergists.html",
             entries=entries, user=user, github_url=github_url,

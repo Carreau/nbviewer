@@ -20,4 +20,26 @@
         </tbody>
         </table>
 
+    <ul class="thumbnails example-sites">
+        {% for entry in entries %}
+            <li class="span4">
+            <p class="marketing-byline">{{entry.description}}</p>
+            <a class="thumbnail" href="{{entry.id}}" target="_blank" style="height:200px">
+                <div style="background:url(http://www.siliconrepublic.com/fs/img/news/201208/rs-426x288/python-logo.jpg);height:100%" >
+                    <span style="display: block;
+    height: 100%;
+    overflow: hidden;">
+                    <img
+                        style='opacity:0;width:auto;max-width:none';
+                        src="{{entry.thumb.raw_url}}"
+                        onload="this.style.opacity=1"  
+                    />
+                    </span>
+                </div>
+            </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+
 {% endblock %}
